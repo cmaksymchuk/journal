@@ -1,0 +1,1066 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title></title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #faf7f2;
+      --surface: #ffffff;
+      --text: #3d3832;
+      --text-muted: #8a8278;
+      --accent: #c4a882;
+      --accent-soft: #ede4d6;
+      --accent-hover: #b8996e;
+      --border: #e8e0d4;
+      --error: #c4706a;
+      --success: #7a9e7e;
+      --radius: 14px;
+      --shadow: 0 2px 12px rgba(61, 56, 50, 0.06);
+    }
+
+    html { font-size: 16px; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+      min-height: 100dvh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+  /* Password screen */
+    #password-screen {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100dvh;
+      padding: 2rem 1.5rem;
+    }
+
+    .password-card {
+      background: var(--surface);
+      border-radius: var(--radius);
+      padding: 2.5rem 2rem;
+      width: 100%;
+      max-width: 360px;
+      box-shadow: var(--shadow);
+      text-align: center;
+    }
+
+    .password-card input {
+      width: 100%;
+      padding: 0.85rem 1rem;
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      font-size: 1rem;
+      background: var(--bg);
+      color: var(--text);
+      margin-bottom: 1rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .password-card input:focus {
+      border-color: var(--accent);
+    }
+
+    .password-error {
+      color: var(--error);
+      font-size: 0.875rem;
+      margin-bottom: 0.75rem;
+      min-height: 1.25rem;
+    }
+
+  /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0.85rem 1.5rem;
+      border: none;
+      border-radius: 10px;
+      font-size: 1rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+      font-family: inherit;
+    }
+
+    .btn:active { transform: scale(0.98); }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #fff;
+      width: 100%;
+    }
+
+    .btn-primary:hover { background: var(--accent-hover); }
+
+    .btn-primary.saved {
+      background: var(--success);
+    }
+
+    .btn-secondary {
+      background: var(--accent-soft);
+      color: var(--text);
+      font-size: 0.9rem;
+      padding: 0.65rem 1.25rem;
+    }
+
+    .btn-secondary:hover { background: var(--border); }
+
+  /* App layout */
+    #app { display: none; max-width: 520px; margin: 0 auto; padding: 1.25rem 1.25rem 3rem; }
+
+    .app-bar {
+      display: flex;
+      justify-content: flex-end;
+      margin-bottom: 0.5rem;
+    }
+
+    .logout-btn {
+      border: none;
+      background: none;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      cursor: pointer;
+      padding: 0.25rem 0;
+      font-family: inherit;
+    }
+
+    .logout-btn:hover { color: var(--text); }
+
+  /* Tabs */
+    .tabs {
+      display: flex;
+      background: var(--surface);
+      border-radius: 12px;
+      padding: 4px;
+      margin-bottom: 1.5rem;
+      box-shadow: var(--shadow);
+    }
+
+    .tab {
+      flex: 1;
+      padding: 0.7rem;
+      border: none;
+      background: transparent;
+      font-size: 0.95rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      border-radius: 9px;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.2s;
+    }
+
+    .tab.active {
+      background: var(--accent-soft);
+      color: var(--text);
+    }
+
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+  /* Sections */
+    .section {
+      background: var(--surface);
+      border-radius: var(--radius);
+      padding: 1.25rem;
+      margin-bottom: 1rem;
+      box-shadow: var(--shadow);
+    }
+
+    .section-label {
+      font-size: 0.8rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-muted);
+      margin-bottom: 0.75rem;
+    }
+
+    .slider-row {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .slider-emoji {
+      font-size: 1.75rem;
+      width: 2.25rem;
+      text-align: center;
+      flex-shrink: 0;
+    }
+
+    .slider-value {
+      font-size: 1.1rem;
+      font-weight: 600;
+      min-width: 1.75rem;
+      text-align: center;
+    }
+
+    input[type="range"] {
+      flex: 1;
+      -webkit-appearance: none;
+      appearance: none;
+      height: 6px;
+      border-radius: 3px;
+      background: var(--border);
+      outline: none;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: var(--accent);
+      cursor: pointer;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+    }
+
+    input[type="range"]::-moz-range-thumb {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: var(--accent);
+      cursor: pointer;
+      border: none;
+    }
+
+  /* Chips */
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .chip {
+      padding: 0.45rem 0.85rem;
+      border: 1.5px solid var(--border);
+      border-radius: 20px;
+      background: var(--bg);
+      font-size: 0.875rem;
+      cursor: pointer;
+      transition: all 0.15s;
+      font-family: inherit;
+      color: var(--text);
+    }
+
+    .chip:hover { border-color: var(--accent); }
+
+    .chip.selected {
+      background: var(--accent-soft);
+      border-color: var(--accent);
+      color: var(--text);
+    }
+
+    .chip-toggle {
+      flex: 1;
+      text-align: center;
+      min-width: 80px;
+    }
+
+  /* Time input */
+    .time-input {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      font-size: 1rem;
+      background: var(--bg);
+      color: var(--text);
+      font-family: inherit;
+      outline: none;
+    }
+
+    .time-input:focus { border-color: var(--accent); }
+
+    .hint {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-top: 0.5rem;
+      line-height: 1.4;
+    }
+
+  /* Notes */
+    .notes-input {
+      width: 100%;
+      padding: 0.85rem 1rem;
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      font-size: 0.95rem;
+      background: var(--bg);
+      color: var(--text);
+      font-family: inherit;
+      resize: vertical;
+      min-height: 80px;
+      outline: none;
+    }
+
+    .notes-input:focus { border-color: var(--accent); }
+
+    .save-row {
+      margin-top: 0.5rem;
+      padding: 0 0.25rem;
+    }
+
+    .mood-shift-detail {
+      margin-top: 0.75rem;
+      display: none;
+    }
+
+    .mood-shift-detail.visible { display: block; }
+
+  /* Date picker */
+    .date-picker {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .date-btn {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      padding: 0.85rem 1rem;
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      background: var(--surface);
+      font-size: 0.95rem;
+      font-weight: 500;
+      color: var(--text);
+      cursor: pointer;
+      font-family: inherit;
+      text-align: left;
+      box-shadow: var(--shadow);
+      transition: border-color 0.15s, background 0.15s;
+    }
+
+    .date-btn:hover { border-color: var(--accent); }
+
+    .date-btn.active {
+      border-color: var(--accent);
+      background: var(--accent-soft);
+    }
+
+    .date-btn-label { flex: 1; }
+
+    .date-status {
+      font-size: 0.8rem;
+      font-weight: 500;
+      flex-shrink: 0;
+      margin-left: 0.75rem;
+    }
+
+    .date-status.filled { color: var(--success); }
+    .date-status.missing { color: var(--text-muted); }
+
+  /* History */
+    .history-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+
+    .history-header h2 {
+      font-size: 1rem;
+      font-weight: 600;
+    }
+
+    .entry-card {
+      background: var(--surface);
+      border-radius: var(--radius);
+      padding: 1.15rem 1.25rem;
+      margin-bottom: 0.75rem;
+      box-shadow: var(--shadow);
+    }
+
+    .entry-date {
+      font-size: 0.8rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      margin-bottom: 0.6rem;
+    }
+
+    .entry-stats {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem 1.25rem;
+      font-size: 0.9rem;
+      margin-bottom: 0.6rem;
+    }
+
+    .entry-stat {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+
+    .entry-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .entry-chip {
+      font-size: 0.75rem;
+      padding: 0.2rem 0.55rem;
+      background: var(--accent-soft);
+      border-radius: 12px;
+      color: var(--text);
+    }
+
+    .entry-notes {
+      font-size: 0.875rem;
+      color: var(--text-muted);
+      font-style: italic;
+      margin-top: 0.5rem;
+      padding-top: 0.5rem;
+      border-top: 1px solid var(--border);
+    }
+
+    .empty-state {
+      text-align: center;
+      color: var(--text-muted);
+      padding: 3rem 1rem;
+      font-size: 0.95rem;
+    }
+
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+
+  <!-- Password screen -->
+  <div id="password-screen">
+    <div class="password-card">
+      <div class="password-error" id="password-error"></div>
+      <input type="password" id="password-input" autocomplete="current-password">
+      <button class="btn btn-primary" id="password-submit">Submit</button>
+    </div>
+  </div>
+
+  <!-- Main app -->
+  <main id="app">
+    <div class="app-bar">
+      <button type="button" id="logout-btn" class="logout-btn">Log out</button>
+    </div>
+    <nav class="tabs">
+      <button class="tab active" data-tab="journal">Journal</button>
+      <button class="tab" data-tab="history">History</button>
+    </nav>
+
+    <!-- Journal tab -->
+    <section id="tab-journal" class="tab-panel active">
+      <div class="date-picker" id="date-picker"></div>
+
+      <div class="section">
+        <div class="section-label">Mood</div>
+        <div class="slider-row">
+          <span class="slider-emoji" id="mood-emoji">🙂</span>
+          <input type="range" id="mood-slider" min="1" max="10" value="5">
+          <span class="slider-value" id="mood-value">5</span>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-label">Energy</div>
+        <div class="slider-row">
+          <span class="slider-emoji">⚡</span>
+          <input type="range" id="energy-slider" min="1" max="10" value="5">
+          <span class="slider-value" id="energy-value">5</span>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-label">Sleep the night before</div>
+        <div class="slider-row">
+          <span class="slider-emoji">😴</span>
+          <input type="range" id="sleep-slider" min="3" max="13" step="0.5" value="8">
+          <span class="slider-value" id="sleep-display">8h</span>
+        </div>
+        <div class="section-label" style="margin-top: 1rem;">Quality</div>
+        <div class="chips" id="sleep-quality-chips">
+          <button class="chip chip-toggle" data-value="Bad">Bad</button>
+          <button class="chip chip-toggle selected" data-value="OK">OK</button>
+          <button class="chip chip-toggle" data-value="Good">Good</button>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-label">Med time</div>
+        <input type="time" class="time-input" id="med-time" value="19:00">
+        <p class="hint">Default is 7:00 pm — only change if you took it at a different time</p>
+      </div>
+
+      <div class="section">
+        <div class="section-label">Flavour</div>
+        <div class="chips" id="flavour-chips">
+          <button class="chip" data-value="Foggy">Foggy</button>
+          <button class="chip" data-value="Anxious">Anxious</button>
+          <button class="chip" data-value="Flat">Flat</button>
+          <button class="chip" data-value="Restless">Restless</button>
+          <button class="chip" data-value="OK">OK</button>
+          <button class="chip" data-value="Calm">Calm</button>
+          <button class="chip" data-value="Good">Good</button>
+          <button class="chip" data-value="Really good">Really good</button>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-label">Appetite today</div>
+        <div class="chips" id="appetite-chips">
+          <button class="chip chip-toggle" data-value="Poor">Poor</button>
+          <button class="chip chip-toggle" data-value="Normal">Normal</button>
+          <button class="chip chip-toggle" data-value="Strong">Strong</button>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-label">Being around people today…</div>
+        <div class="chips" id="social-energy-chips">
+          <button class="chip chip-toggle" data-value="Needed space">Needed space</button>
+          <button class="chip chip-toggle" data-value="In between">In between</button>
+          <button class="chip chip-toggle" data-value="Wanted company">Wanted company</button>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-label" id="mood-shift-label">Mood shift that day?</div>
+        <div class="chips" id="mood-shift-chips">
+          <button class="chip chip-toggle selected" data-value="no">No</button>
+          <button class="chip chip-toggle" data-value="yes">Yes</button>
+        </div>
+        <div class="mood-shift-detail" id="mood-shift-detail">
+          <div class="section-label" style="margin-top: 0.5rem;">What kind?</div>
+          <div class="chips" id="shift-type-chips">
+            <button class="chip" data-value="Something happened">Something happened</button>
+            <button class="chip" data-value="It just came over me">It just came over me</button>
+            <button class="chip" data-value="A bit of both">A bit of both</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-label">Notes</div>
+        <textarea class="notes-input" id="notes" placeholder="Leave blank if nothing to add…"></textarea>
+      </div>
+
+      <div class="save-row">
+        <button class="btn btn-primary" id="save-btn">Save entry</button>
+      </div>
+    </section>
+
+    <!-- History tab -->
+    <section id="tab-history" class="tab-panel">
+      <div class="history-header">
+        <h2>Past entries</h2>
+        <button class="btn btn-secondary" id="export-btn">Export for doctor</button>
+      </div>
+      <div id="history-list"></div>
+    </section>
+  </main>
+
+  <script>
+    const TOKEN_KEY = 'mood_journal_token';
+    const MOOD_EMOJIS = ['😞', '😔', '😕', '😐', '🙂', '😊', '😄', '😁', '🤗', '🤩'];
+
+    let entries = [];
+    let selectedDate = null;
+
+    // --- Auth ---
+    function getToken() {
+      return localStorage.getItem(TOKEN_KEY);
+    }
+
+    function setToken(token) {
+      localStorage.setItem(TOKEN_KEY, token);
+    }
+
+    async function apiFetch(url, options = {}) {
+      const token = getToken();
+      const headers = { ...options.headers };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+      if (options.body) headers['Content-Type'] = 'application/json';
+      return fetch(url, { ...options, headers });
+    }
+
+    function showApp() {
+      document.title = '';
+      document.getElementById('password-screen').classList.add('hidden');
+      document.getElementById('app').style.display = 'block';
+      loadEntries();
+    }
+
+    function showPassword() {
+      document.title = '';
+      document.getElementById('password-screen').classList.remove('hidden');
+      document.getElementById('app').style.display = 'none';
+    }
+
+    function logout() {
+      localStorage.removeItem(TOKEN_KEY);
+      document.getElementById('password-input').value = '';
+      document.getElementById('password-error').textContent = '';
+      showPassword();
+      document.getElementById('password-input').focus();
+    }
+
+    async function authenticate(password) {
+      const res = await fetch('/api/auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setToken(data.token);
+        return true;
+      }
+      return false;
+    }
+
+    // --- Date helpers ---
+    function formatDateKey(d) {
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${y}-${m}-${day}`;
+    }
+
+    function todayDate() {
+      return formatDateKey(new Date());
+    }
+
+    function getRecentDays() {
+      const days = [];
+      const now = new Date();
+      for (let i = 3; i >= 0; i--) {
+        const d = new Date(now);
+        d.setDate(d.getDate() - i);
+        days.push({
+          date: formatDateKey(d),
+          isToday: i === 0,
+          weekday: d.toLocaleDateString('en-US', { weekday: 'long' }),
+        });
+      }
+      return days;
+    }
+
+    function hasEntry(date) {
+      return entries.some(e => e.date === date);
+    }
+
+    function saveButtonLabel() {
+      const days = getRecentDays();
+      const day = days.find(d => d.date === selectedDate);
+      if (!day) return 'Save entry';
+      if (day.isToday) return "Save today's entry";
+      return `Save ${day.weekday}'s entry`;
+    }
+
+    function formatDate(dateStr) {
+      const d = new Date(dateStr + 'T12:00:00');
+      return d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+    }
+
+    function formatTime(timeStr) {
+      if (!timeStr) return '';
+      const [h, m] = timeStr.split(':').map(Number);
+      const ampm = h >= 12 ? 'pm' : 'am';
+      const hour = h % 12 || 12;
+      return `${hour}:${String(m).padStart(2, '0')} ${ampm}`;
+    }
+
+    // --- Sliders ---
+    const moodSlider = document.getElementById('mood-slider');
+    const moodEmoji = document.getElementById('mood-emoji');
+    const moodValue = document.getElementById('mood-value');
+    const energySlider = document.getElementById('energy-slider');
+    const energyValue = document.getElementById('energy-value');
+    const sleepSlider = document.getElementById('sleep-slider');
+    const sleepDisplay = document.getElementById('sleep-display');
+
+    moodSlider.addEventListener('input', () => {
+      const v = +moodSlider.value;
+      moodValue.textContent = v;
+      moodEmoji.textContent = MOOD_EMOJIS[v - 1];
+    });
+
+    energySlider.addEventListener('input', () => {
+      energyValue.textContent = energySlider.value;
+    });
+
+    sleepSlider.addEventListener('input', () => {
+      const v = +sleepSlider.value;
+      sleepDisplay.textContent = Number.isInteger(v) ? `${v}h` : `${v}h`;
+    });
+
+    // --- Chip groups ---
+    function setupSingleSelect(containerId) {
+      const container = document.getElementById(containerId);
+      container.addEventListener('click', (e) => {
+        const chip = e.target.closest('.chip');
+        if (!chip) return;
+        container.querySelectorAll('.chip').forEach(c => c.classList.remove('selected'));
+        chip.classList.add('selected');
+      });
+    }
+
+    function setupMultiSelect(containerId) {
+      const container = document.getElementById(containerId);
+      container.addEventListener('click', (e) => {
+        const chip = e.target.closest('.chip');
+        if (!chip) return;
+        chip.classList.toggle('selected');
+      });
+    }
+
+    setupSingleSelect('sleep-quality-chips');
+    setupMultiSelect('flavour-chips');
+    setupSingleSelect('appetite-chips');
+    setupSingleSelect('social-energy-chips');
+
+    // Mood shift
+    const moodShiftDetail = document.getElementById('mood-shift-detail');
+    document.getElementById('mood-shift-chips').addEventListener('click', (e) => {
+      const chip = e.target.closest('.chip');
+      if (!chip) return;
+      document.querySelectorAll('#mood-shift-chips .chip').forEach(c => c.classList.remove('selected'));
+      chip.classList.add('selected');
+      moodShiftDetail.classList.toggle('visible', chip.dataset.value === 'yes');
+    });
+
+    document.getElementById('shift-type-chips').addEventListener('click', (e) => {
+      const chip = e.target.closest('.chip');
+      if (!chip) return;
+      document.querySelectorAll('#shift-type-chips .chip').forEach(c => c.classList.remove('selected'));
+      chip.classList.add('selected');
+    });
+
+    function getSelectedChip(containerId) {
+      const chip = document.querySelector(`#${containerId} .chip.selected`);
+      return chip ? chip.dataset.value : null;
+    }
+
+    function getSelectedChips(containerId) {
+      return [...document.querySelectorAll(`#${containerId} .chip.selected`)].map(c => c.dataset.value);
+    }
+
+    function resetFormToDefaults() {
+      moodSlider.value = 5;
+      moodValue.textContent = '5';
+      moodEmoji.textContent = MOOD_EMOJIS[4];
+      energySlider.value = 5;
+      energyValue.textContent = '5';
+      sleepSlider.value = 8;
+      sleepDisplay.textContent = '8h';
+      document.querySelectorAll('#sleep-quality-chips .chip').forEach(c => {
+        c.classList.toggle('selected', c.dataset.value === 'OK');
+      });
+      document.getElementById('med-time').value = '19:00';
+      document.querySelectorAll('#flavour-chips .chip').forEach(c => c.classList.remove('selected'));
+      document.querySelectorAll('#appetite-chips .chip').forEach(c => {
+        c.classList.toggle('selected', c.dataset.value === 'Normal');
+      });
+      document.querySelectorAll('#social-energy-chips .chip').forEach(c => {
+        c.classList.toggle('selected', c.dataset.value === 'In between');
+      });
+      document.querySelectorAll('#mood-shift-chips .chip').forEach(c => c.classList.remove('selected'));
+      document.querySelector('#mood-shift-chips .chip[data-value="no"]').classList.add('selected');
+      moodShiftDetail.classList.remove('visible');
+      document.querySelectorAll('#shift-type-chips .chip').forEach(c => c.classList.remove('selected'));
+      document.getElementById('notes').value = '';
+    }
+
+    function loadFormForDate(date) {
+      selectedDate = date;
+      const entry = entries.find(e => e.date === date);
+      if (entry) populateForm(entry);
+      else resetFormToDefaults();
+      document.getElementById('save-btn').textContent = saveButtonLabel();
+      renderDatePicker();
+    }
+
+    function renderDatePicker() {
+      const picker = document.getElementById('date-picker');
+      const days = getRecentDays();
+      if (!selectedDate) selectedDate = todayDate();
+
+      picker.innerHTML = days.map(day => {
+        const label = day.isToday
+          ? `Today (${day.weekday})`
+          : `(${day.weekday})`;
+        const filled = hasEntry(day.date);
+        const statusClass = filled ? 'filled' : 'missing';
+        const statusText = filled ? 'Filled' : 'Missing';
+        const active = day.date === selectedDate ? ' active' : '';
+
+        return `
+          <button type="button" class="date-btn${active}" data-date="${day.date}">
+            <span class="date-btn-label">${label}</span>
+            <span class="date-status ${statusClass}">${statusText}</span>
+          </button>
+        `;
+      }).join('');
+
+      picker.querySelectorAll('.date-btn').forEach(btn => {
+        btn.addEventListener('click', () => loadFormForDate(btn.dataset.date));
+      });
+    }
+
+    // --- Build entry from form ---
+    function buildEntry() {
+      const moodShift = getSelectedChip('mood-shift-chips');
+      return {
+        date: selectedDate || todayDate(),
+        mood: +moodSlider.value,
+        energy: +energySlider.value,
+        sleepHours: +sleepSlider.value,
+        sleepQuality: getSelectedChip('sleep-quality-chips') || 'OK',
+        medicationTime: document.getElementById('med-time').value,
+        flavours: getSelectedChips('flavour-chips'),
+        appetite: getSelectedChip('appetite-chips'),
+        socialEnergy: getSelectedChip('social-energy-chips'),
+        moodShift: moodShift === 'yes',
+        moodShiftType: moodShift === 'yes' ? getSelectedChip('shift-type-chips') : null,
+        notes: document.getElementById('notes').value.trim(),
+      };
+    }
+
+    function populateForm(entry) {
+      moodSlider.value = entry.mood ?? 5;
+      moodValue.textContent = moodSlider.value;
+      moodEmoji.textContent = MOOD_EMOJIS[+moodSlider.value - 1];
+
+      energySlider.value = entry.energy ?? 5;
+      energyValue.textContent = energySlider.value;
+
+      sleepSlider.value = entry.sleepHours ?? 8;
+      sleepDisplay.textContent = `${sleepSlider.value}h`;
+
+      document.querySelectorAll('#sleep-quality-chips .chip').forEach(c => {
+        c.classList.toggle('selected', c.dataset.value === (entry.sleepQuality || 'OK'));
+      });
+
+      document.getElementById('med-time').value = entry.medicationTime || '19:00';
+
+      document.querySelectorAll('#flavour-chips .chip').forEach(c => {
+        c.classList.toggle('selected', (entry.flavours || []).includes(c.dataset.value));
+      });
+
+      document.querySelectorAll('#appetite-chips .chip').forEach(c => {
+        c.classList.toggle('selected', c.dataset.value === entry.appetite);
+      });
+
+      const socialEnergyMap = {
+        'Wanted to hide away': 'Needed space',
+        'Somewhere in between': 'In between',
+        'Wanted to be around people': 'Wanted company',
+      };
+      const socialEnergy = socialEnergyMap[entry.socialEnergy] || entry.socialEnergy;
+      document.querySelectorAll('#social-energy-chips .chip').forEach(c => {
+        c.classList.toggle('selected', c.dataset.value === socialEnergy);
+      });
+
+      document.querySelectorAll('#mood-shift-chips .chip').forEach(c => {
+        c.classList.remove('selected');
+      });
+      const shiftChip = entry.moodShift
+        ? document.querySelector('#mood-shift-chips .chip[data-value="yes"]')
+        : document.querySelector('#mood-shift-chips .chip[data-value="no"]');
+      if (shiftChip) shiftChip.classList.add('selected');
+      moodShiftDetail.classList.toggle('visible', !!entry.moodShift);
+
+      document.querySelectorAll('#shift-type-chips .chip').forEach(c => {
+        c.classList.toggle('selected', c.dataset.value === entry.moodShiftType);
+      });
+
+      document.getElementById('notes').value = entry.notes || '';
+    }
+
+    // --- Save ---
+    const saveBtn = document.getElementById('save-btn');
+
+    saveBtn.addEventListener('click', async () => {
+      const entry = buildEntry();
+      saveBtn.disabled = true;
+      saveBtn.textContent = 'Saving…';
+
+      try {
+        const res = await apiFetch('/api/entries', {
+          method: 'POST',
+          body: JSON.stringify(entry),
+        });
+
+        if (res.status === 401) { logout(); return; }
+
+        if (res.ok) {
+          saveBtn.textContent = 'Saved ✓';
+          saveBtn.classList.add('saved');
+          await loadEntries();
+          setTimeout(() => {
+            saveBtn.textContent = saveButtonLabel();
+            saveBtn.classList.remove('saved');
+            saveBtn.disabled = false;
+          }, 2000);
+        } else {
+          saveBtn.textContent = 'Error — try again';
+          saveBtn.disabled = false;
+        }
+      } catch {
+        saveBtn.textContent = 'Error — try again';
+        saveBtn.disabled = false;
+      }
+    });
+
+    // --- Load entries ---
+    async function loadEntries() {
+      try {
+        const res = await apiFetch('/api/entries');
+        if (res.status === 401) { logout(); return; }
+        const data = await res.json();
+        entries = data.entries || [];
+        renderHistory();
+        if (!selectedDate) selectedDate = todayDate();
+        loadFormForDate(selectedDate);
+      } catch (err) {
+        console.error('Failed to load entries:', err);
+      }
+    }
+
+    // --- History ---
+    function renderHistory() {
+      const list = document.getElementById('history-list');
+      const shown = entries.slice(0, 60);
+
+      if (shown.length === 0) {
+        list.innerHTML = '<p class="empty-state">No entries yet — add one using the day buttons on the Journal tab.</p>';
+        return;
+      }
+
+      list.innerHTML = shown.map(entry => {
+        const emoji = MOOD_EMOJIS[(entry.mood || 5) - 1];
+        const flavours = (entry.flavours || []).map(f => `<span class="entry-chip">${f}</span>`).join('');
+        const shiftText = entry.moodShift
+          ? `Yes${entry.moodShiftType ? ` — ${entry.moodShiftType}` : ''}`
+          : 'No';
+        const notes = entry.notes
+          ? `<div class="entry-notes">${escapeHtml(entry.notes)}</div>`
+          : '';
+
+        return `
+          <article class="entry-card">
+            <div class="entry-date">${formatDate(entry.date)}</div>
+            <div class="entry-stats">
+              <span class="entry-stat">${emoji} Mood ${entry.mood}/10</span>
+              <span class="entry-stat">⚡ Energy ${entry.energy}/10</span>
+              <span class="entry-stat">😴 ${entry.sleepHours}h · ${entry.sleepQuality || '—'}</span>
+              <span class="entry-stat">💊 ${formatTime(entry.medicationTime)}</span>
+            </div>
+            ${flavours ? `<div class="entry-chips">${flavours}</div>` : ''}
+            ${entry.appetite ? `<p class="entry-stat" style="font-size:0.85rem;color:var(--text-muted)">Appetite: ${escapeHtml(entry.appetite)}</p>` : ''}
+            ${entry.socialEnergy ? `<p class="entry-stat" style="font-size:0.85rem;color:var(--text-muted)">Being around people: ${escapeHtml(entry.socialEnergy)}</p>` : ''}
+            <p class="entry-stat" style="font-size:0.85rem;color:var(--text-muted)">Mood shift: ${shiftText}</p>
+            ${notes}
+          </article>
+        `;
+      }).join('');
+    }
+
+    function escapeHtml(str) {
+      const div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
+    }
+
+    // --- CSV Export ---
+    document.getElementById('export-btn').addEventListener('click', () => {
+      const headers = ['Date', 'Mood (1-10)', 'Energy (1-10)', 'Sleep the night before (hours)', 'Sleep the night before quality', 'Med time', 'Flavour', 'Appetite', 'Social energy', 'Mood shift', 'Shift type', 'Notes'];
+      const rows = entries.map(e => [
+        e.date,
+        e.mood,
+        e.energy,
+        e.sleepHours,
+        e.sleepQuality || '',
+        e.medicationTime || '',
+        (e.flavours || []).join('; '),
+        e.appetite || '',
+        e.socialEnergy || '',
+        e.moodShift ? 'Yes' : 'No',
+        e.moodShiftType || '',
+        (e.notes || '').replace(/"/g, '""'),
+      ]);
+
+      const csv = [headers, ...rows]
+        .map(row => row.map(cell => `"${cell}"`).join(','))
+        .join('\n');
+
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `mood-journal-${todayDate()}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+
+    // --- Tabs ---
+    document.querySelectorAll('.tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+        tab.classList.add('active');
+        document.getElementById(`tab-${tab.dataset.tab}`).classList.add('active');
+      });
+    });
+
+    // --- Password ---
+    const passwordInput = document.getElementById('password-input');
+    const passwordError = document.getElementById('password-error');
+
+    async function submitPassword() {
+      passwordError.textContent = '';
+      const password = passwordInput.value;
+      if (!password) {
+        passwordInput.focus();
+        return;
+      }
+      const ok = await authenticate(password);
+      if (ok) {
+        showApp();
+      } else {
+        passwordInput.value = '';
+        passwordInput.focus();
+      }
+    }
+
+    document.getElementById('logout-btn').addEventListener('click', logout);
+    document.getElementById('password-submit').addEventListener('click', submitPassword);
+    passwordInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') submitPassword();
+    });
+
+    // --- Init ---
+    if (getToken()) {
+      showApp();
+    } else {
+      showPassword();
+      passwordInput.focus();
+    }
+  </script>
+</body>
+</html>
