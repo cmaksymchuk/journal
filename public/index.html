@@ -545,11 +545,19 @@
           <button class="chip chip-toggle" data-value="yes">Yes</button>
         </div>
         <div class="mood-shift-detail" id="mood-shift-detail">
-          <div class="section-label" style="margin-top: 0.5rem;">What kind?</div>
+          <div class="section-label" style="margin-top: 0.5rem;">What kind of shift?</div>
           <div class="chips" id="shift-type-chips">
-            <button class="chip" data-value="Something happened">Something happened</button>
-            <button class="chip" data-value="It just came over me">It just came over me</button>
-            <button class="chip" data-value="A bit of both">A bit of both</button>
+            <button class="chip chip-toggle" data-value="Something happened">Something happened</button>
+            <button class="chip chip-toggle" data-value="It just came over me">It just came over me</button>
+            <button class="chip chip-toggle" data-value="A bit of both">A bit of both</button>
+          </div>
+          <div class="section-label" style="margin-top: 1rem;">When was the low point?</div>
+          <div class="chips" id="low-point-chips">
+            <button class="chip chip-toggle" data-value="Morning">Morning</button>
+            <button class="chip chip-toggle" data-value="Afternoon">Afternoon</button>
+            <button class="chip chip-toggle" data-value="Evening">Evening</button>
+            <button class="chip chip-toggle" data-value="Night">Night</button>
+            <button class="chip chip-toggle" data-value="It was up and down">It was up and down</button>
           </div>
         </div>
       </div>
@@ -744,12 +752,8 @@
       moodShiftDetail.classList.toggle('visible', chip.dataset.value === 'yes');
     });
 
-    document.getElementById('shift-type-chips').addEventListener('click', (e) => {
-      const chip = e.target.closest('.chip');
-      if (!chip) return;
-      document.querySelectorAll('#shift-type-chips .chip').forEach(c => c.classList.remove('selected'));
-      chip.classList.add('selected');
-    });
+    setupSingleSelect('shift-type-chips');
+    setupSingleSelect('low-point-chips');
 
     function getSelectedChip(containerId) {
       const chip = document.querySelector(`#${containerId} .chip.selected`);
@@ -783,6 +787,7 @@
       document.querySelector('#mood-shift-chips .chip[data-value="no"]').classList.add('selected');
       moodShiftDetail.classList.remove('visible');
       document.querySelectorAll('#shift-type-chips .chip').forEach(c => c.classList.remove('selected'));
+      document.querySelectorAll('#low-point-chips .chip').forEach(c => c.classList.remove('selected'));
       document.getElementById('notes').value = '';
     }
 
@@ -837,6 +842,7 @@
         socialEnergy: getSelectedChip('social-energy-chips'),
         moodShift: moodShift === 'yes',
         moodShiftType: moodShift === 'yes' ? getSelectedChip('shift-type-chips') : null,
+        lowPointTime: moodShift === 'yes' ? getSelectedChip('low-point-chips') : null,
         notes: document.getElementById('notes').value.trim(),
       };
     }
@@ -887,6 +893,10 @@
 
       document.querySelectorAll('#shift-type-chips .chip').forEach(c => {
         c.classList.toggle('selected', c.dataset.value === entry.moodShiftType);
+      });
+
+      document.querySelectorAll('#low-point-chips .chip').forEach(c => {
+        c.classList.toggle('selected', c.dataset.value === entry.lowPointTime);
       });
 
       document.getElementById('notes').value = entry.notes || '';
@@ -955,8 +965,11 @@
       list.innerHTML = shown.map(entry => {
         const emoji = MOOD_EMOJIS[(entry.mood || 5) - 1];
         const flavours = (entry.flavours || []).map(f => `<span class="entry-chip">${f}</span>`).join('');
+        const shiftParts = [];
+        if (entry.moodShiftType) shiftParts.push(entry.moodShiftType);
+        if (entry.lowPointTime) shiftParts.push(entry.lowPointTime);
         const shiftText = entry.moodShift
-          ? `Yes${entry.moodShiftType ? ` — ${entry.moodShiftType}` : ''}`
+          ? `Yes${shiftParts.length ? ` — ${shiftParts.join(' · ')}` : ''}`
           : 'No';
         const notes = entry.notes
           ? `<div class="entry-notes">${escapeHtml(entry.notes)}</div>`
@@ -989,7 +1002,7 @@
 
     // --- CSV Export ---
     document.getElementById('export-btn').addEventListener('click', () => {
-      const headers = ['Date', 'Mood (1-10)', 'Energy (1-10)', 'Sleep the night before (hours)', 'Sleep the night before quality', 'Med time', 'Flavour', 'Appetite', 'Social energy', 'Mood shift', 'Shift type', 'Notes'];
+      const headers = ['Date', 'Mood (1-10)', 'Energy (1-10)', 'Sleep the night before (hours)', 'Sleep the night before quality', 'Med time', 'Flavour', 'Appetite', 'Social energy', 'Mood shift', 'Shift type', 'Low point time of day', 'Notes'];
       const rows = entries.map(e => [
         e.date,
         e.mood,
@@ -1002,6 +1015,7 @@
         e.socialEnergy || '',
         e.moodShift ? 'Yes' : 'No',
         e.moodShiftType || '',
+        e.lowPointTime || '',
         (e.notes || '').replace(/"/g, '""'),
       ]);
 
