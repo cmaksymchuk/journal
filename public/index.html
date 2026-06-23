@@ -289,6 +289,61 @@
       line-height: 1.4;
     }
 
+    .sleep-times {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.75rem;
+    }
+
+    .sleep-time-field label {
+      display: block;
+      font-size: 0.8rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-muted);
+      margin-bottom: 0.4rem;
+    }
+
+    .sleep-duration-hint {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-top: 0.5rem;
+      font-style: italic;
+    }
+
+    .basics-item {
+      margin-bottom: 1rem;
+    }
+
+    .basics-item:last-child {
+      margin-bottom: 0;
+    }
+
+    .number-input {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      font-size: 1rem;
+      background: var(--bg);
+      color: var(--text);
+      font-family: inherit;
+      outline: none;
+    }
+
+    .number-input:focus { border-color: var(--accent); }
+
+    .entry-basics {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem 1rem;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-top: 0.35rem;
+      margin-bottom: 0.25rem;
+    }
+
   /* Notes */
     .notes-input {
       width: 100%;
@@ -487,16 +542,48 @@
 
       <div class="section">
         <div class="section-label">Sleep the night before</div>
-        <div class="slider-row">
-          <span class="slider-emoji">😴</span>
-          <input type="range" id="sleep-slider" min="3" max="13" step="0.5" value="8">
-          <span class="slider-value" id="sleep-display">8h</span>
+        <div class="sleep-times">
+          <div class="sleep-time-field">
+            <label for="bed-time">Went to bed</label>
+            <input type="time" class="time-input" id="bed-time" value="">
+          </div>
+          <div class="sleep-time-field">
+            <label for="wake-time">Woke up</label>
+            <input type="time" class="time-input" id="wake-time" value="">
+          </div>
         </div>
+        <p class="sleep-duration-hint hidden" id="sleep-duration-hint"></p>
         <div class="section-label" style="margin-top: 1rem;">Quality</div>
         <div class="chips" id="sleep-quality-chips">
           <button class="chip chip-toggle" data-value="Bad">Bad</button>
           <button class="chip chip-toggle selected" data-value="OK">OK</button>
           <button class="chip chip-toggle" data-value="Good">Good</button>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-label">Today's basics</div>
+        <div class="basics-item">
+          <div class="section-label" style="margin-bottom: 0.5rem;">Meals eaten today</div>
+          <div class="chips" id="meals-chips">
+            <button class="chip chip-toggle" data-value="0">0</button>
+            <button class="chip chip-toggle" data-value="1">1</button>
+            <button class="chip chip-toggle selected" data-value="2">2</button>
+            <button class="chip chip-toggle" data-value="3">3+</button>
+          </div>
+        </div>
+        <div class="basics-item">
+          <div class="section-label" style="margin-bottom: 0.5rem;">Minutes of cardio</div>
+          <input type="number" class="number-input" id="cardio-minutes" min="0" max="180" step="5" value="0" placeholder="0 = none, that's fine">
+          <p class="hint">0 = none, that's fine</p>
+        </div>
+        <div class="basics-item">
+          <div class="section-label" style="margin-bottom: 0.5rem;">Natural light today</div>
+          <div class="chips" id="natural-light-chips">
+            <button class="chip" data-value="Morning">Morning</button>
+            <button class="chip" data-value="Afternoon">Afternoon</button>
+            <button class="chip" data-value="Evening">Evening</button>
+          </div>
         </div>
       </div>
 
@@ -507,8 +594,8 @@
       </div>
 
       <div class="section">
-        <div class="section-label">Flavour</div>
-        <div class="chips" id="flavour-chips">
+        <div class="section-label">If today had a vibe…</div>
+        <div class="chips" id="vibe-chips">
           <button class="chip" data-value="Foggy">Foggy</button>
           <button class="chip" data-value="Anxious">Anxious</button>
           <button class="chip" data-value="Flat">Flat</button>
@@ -693,14 +780,94 @@
       return `${hour}:${String(m).padStart(2, '0')} ${ampm}`;
     }
 
+    function getNullableTimeInput(id) {
+      const value = document.getElementById(id).value;
+      return value || null;
+    }
+
+    function calcSleepMinutes(bedTime, wakeTime) {
+      if (!bedTime || !wakeTime) return null;
+      const [bedH, bedM] = bedTime.split(':').map(Number);
+      const [wakeH, wakeM] = wakeTime.split(':').map(Number);
+      let bedMins = bedH * 60 + bedM;
+      let wakeMins = wakeH * 60 + wakeM;
+      if (wakeMins <= bedMins) wakeMins += 24 * 60;
+      return wakeMins - bedMins;
+    }
+
+    function formatSleepDurationFromMinutes(total) {
+      if (total == null) return null;
+      const hours = Math.floor(total / 60);
+      const mins = total % 60;
+      if (mins === 0) return `${hours}h`;
+      return `${hours}h ${mins}m`;
+    }
+
+    function formatSleepDuration(bedTime, wakeTime) {
+      return formatSleepDurationFromMinutes(calcSleepMinutes(bedTime, wakeTime));
+    }
+
+    function formatSleepDurationHours(bedTime, wakeTime, fallbackHours) {
+      const mins = calcSleepMinutes(bedTime, wakeTime);
+      if (mins != null) {
+        const hours = mins / 60;
+        return Number.isInteger(hours) ? String(hours) : hours.toFixed(2);
+      }
+      if (fallbackHours != null && fallbackHours !== '') return String(fallbackHours);
+      return '';
+    }
+
+    function getNaturalLightValues(entry) {
+      if (Array.isArray(entry.naturalLight) && entry.naturalLight.length) {
+        return entry.naturalLight;
+      }
+      return [];
+    }
+
+    function formatNaturalLightHistory(entry) {
+      const values = getNaturalLightValues(entry);
+      if (values.length) return `☀️ ${values.join(', ')}`;
+      if (entry.sunlight) return '☀️ Yes';
+      return null;
+    }
+
+    function formatNaturalLightCsv(entry) {
+      const values = getNaturalLightValues(entry);
+      if (values.length) return values.join(', ');
+      if (entry.sunlight) return 'Yes';
+      return '';
+    }
+
+    function formatHistorySleep(entry) {
+      const quality = entry.sleepQuality || '—';
+      const duration = formatSleepDuration(entry.bedTime, entry.wakeTime);
+      if (duration) return `${duration} · ${quality}`;
+      if (entry.sleepHours != null && entry.sleepHours !== '' && !entry.bedTime && !entry.wakeTime) {
+        return `${entry.sleepHours}h (estimated) · ${quality}`;
+      }
+      return quality;
+    }
+
+    function updateSleepDurationHint() {
+      const bedTime = document.getElementById('bed-time').value;
+      const wakeTime = document.getElementById('wake-time').value;
+      const hint = document.getElementById('sleep-duration-hint');
+      const duration = formatSleepDuration(bedTime, wakeTime);
+      if (duration) {
+        hint.textContent = `↳ ${duration} in bed`;
+        hint.classList.remove('hidden');
+      } else {
+        hint.textContent = '';
+        hint.classList.add('hidden');
+      }
+    }
+
     // --- Sliders ---
     const moodSlider = document.getElementById('mood-slider');
     const moodEmoji = document.getElementById('mood-emoji');
     const moodValue = document.getElementById('mood-value');
     const energySlider = document.getElementById('energy-slider');
     const energyValue = document.getElementById('energy-value');
-    const sleepSlider = document.getElementById('sleep-slider');
-    const sleepDisplay = document.getElementById('sleep-display');
 
     moodSlider.addEventListener('input', () => {
       const v = +moodSlider.value;
@@ -710,11 +877,6 @@
 
     energySlider.addEventListener('input', () => {
       energyValue.textContent = energySlider.value;
-    });
-
-    sleepSlider.addEventListener('input', () => {
-      const v = +sleepSlider.value;
-      sleepDisplay.textContent = Number.isInteger(v) ? `${v}h` : `${v}h`;
     });
 
     // --- Chip groups ---
@@ -738,9 +900,14 @@
     }
 
     setupSingleSelect('sleep-quality-chips');
-    setupMultiSelect('flavour-chips');
+    setupMultiSelect('vibe-chips');
     setupSingleSelect('appetite-chips');
     setupSingleSelect('social-energy-chips');
+    setupSingleSelect('meals-chips');
+    setupMultiSelect('natural-light-chips');
+
+    document.getElementById('bed-time').addEventListener('input', updateSleepDurationHint);
+    document.getElementById('wake-time').addEventListener('input', updateSleepDurationHint);
 
     // Mood shift
     const moodShiftDetail = document.getElementById('mood-shift-detail');
@@ -770,13 +937,19 @@
       moodEmoji.textContent = MOOD_EMOJIS[4];
       energySlider.value = 5;
       energyValue.textContent = '5';
-      sleepSlider.value = 8;
-      sleepDisplay.textContent = '8h';
       document.querySelectorAll('#sleep-quality-chips .chip').forEach(c => {
         c.classList.toggle('selected', c.dataset.value === 'OK');
       });
+      document.getElementById('bed-time').value = '';
+      document.getElementById('wake-time').value = '';
+      updateSleepDurationHint();
+      document.querySelectorAll('#meals-chips .chip').forEach(c => {
+        c.classList.toggle('selected', c.dataset.value === '2');
+      });
+      document.getElementById('cardio-minutes').value = 0;
+      document.querySelectorAll('#natural-light-chips .chip').forEach(c => c.classList.remove('selected'));
       document.getElementById('med-time').value = '19:00';
-      document.querySelectorAll('#flavour-chips .chip').forEach(c => c.classList.remove('selected'));
+      document.querySelectorAll('#vibe-chips .chip').forEach(c => c.classList.remove('selected'));
       document.querySelectorAll('#appetite-chips .chip').forEach(c => {
         c.classList.toggle('selected', c.dataset.value === 'Normal');
       });
@@ -830,14 +1003,19 @@
     // --- Build entry from form ---
     function buildEntry() {
       const moodShift = getSelectedChip('mood-shift-chips');
+      const mealsValue = getSelectedChip('meals-chips');
       return {
         date: selectedDate || todayDate(),
         mood: +moodSlider.value,
         energy: +energySlider.value,
-        sleepHours: +sleepSlider.value,
         sleepQuality: getSelectedChip('sleep-quality-chips') || 'OK',
+        bedTime: getNullableTimeInput('bed-time'),
+        wakeTime: getNullableTimeInput('wake-time'),
+        mealsEaten: mealsValue != null ? +mealsValue : 2,
+        cardioMinutes: Math.min(180, Math.max(0, +document.getElementById('cardio-minutes').value || 0)),
+        naturalLight: getSelectedChips('natural-light-chips'),
         medicationTime: document.getElementById('med-time').value,
-        flavours: getSelectedChips('flavour-chips'),
+        vibe: getSelectedChips('vibe-chips'),
         appetite: getSelectedChip('appetite-chips'),
         socialEnergy: getSelectedChip('social-energy-chips'),
         moodShift: moodShift === 'yes',
@@ -855,17 +1033,32 @@
       energySlider.value = entry.energy ?? 5;
       energyValue.textContent = energySlider.value;
 
-      sleepSlider.value = entry.sleepHours ?? 8;
-      sleepDisplay.textContent = `${sleepSlider.value}h`;
-
       document.querySelectorAll('#sleep-quality-chips .chip').forEach(c => {
         c.classList.toggle('selected', c.dataset.value === (entry.sleepQuality || 'OK'));
       });
 
+      document.getElementById('bed-time').value = entry.bedTime || '';
+      document.getElementById('wake-time').value = entry.wakeTime || '';
+      updateSleepDurationHint();
+
+      const meals = entry.mealsEaten ?? 2;
+      const mealsChipValue = meals >= 3 ? '3' : String(meals);
+      document.querySelectorAll('#meals-chips .chip').forEach(c => {
+        c.classList.toggle('selected', c.dataset.value === mealsChipValue);
+      });
+
+      document.getElementById('cardio-minutes').value = entry.cardioMinutes ?? 0;
+
+      const naturalLight = getNaturalLightValues(entry);
+      document.querySelectorAll('#natural-light-chips .chip').forEach(c => {
+        c.classList.toggle('selected', naturalLight.includes(c.dataset.value));
+      });
+
       document.getElementById('med-time').value = entry.medicationTime || '19:00';
 
-      document.querySelectorAll('#flavour-chips .chip').forEach(c => {
-        c.classList.toggle('selected', (entry.flavours || []).includes(c.dataset.value));
+      const vibeValues = entry.vibe || entry.flavours || [];
+      document.querySelectorAll('#vibe-chips .chip').forEach(c => {
+        c.classList.toggle('selected', vibeValues.includes(c.dataset.value));
       });
 
       document.querySelectorAll('#appetite-chips .chip').forEach(c => {
@@ -964,7 +1157,8 @@
 
       list.innerHTML = shown.map(entry => {
         const emoji = MOOD_EMOJIS[(entry.mood || 5) - 1];
-        const flavours = (entry.flavours || []).map(f => `<span class="entry-chip">${f}</span>`).join('');
+        const vibeValues = entry.vibe || entry.flavours || [];
+        const vibes = vibeValues.map(f => `<span class="entry-chip">${f}</span>`).join('');
         const shiftParts = [];
         if (entry.moodShiftType) shiftParts.push(entry.moodShiftType);
         if (entry.lowPointTime) shiftParts.push(entry.lowPointTime);
@@ -975,16 +1169,38 @@
           ? `<div class="entry-notes">${escapeHtml(entry.notes)}</div>`
           : '';
 
+        const basicsParts = [];
+        if (entry.bedTime && !entry.wakeTime) {
+          basicsParts.push(`🛏 Bed ${formatTime(entry.bedTime)}`);
+        } else if (entry.wakeTime && !entry.bedTime) {
+          basicsParts.push(`🛏 Wake ${formatTime(entry.wakeTime)}`);
+        }
+        const meals = entry.mealsEaten;
+        if (meals != null && meals !== 2) {
+          basicsParts.push(`🍽 ${meals >= 3 ? '3+' : meals} meals`);
+        }
+        if (entry.cardioMinutes) {
+          basicsParts.push(`🏃 ${entry.cardioMinutes} min`);
+        }
+        const naturalLightDisplay = formatNaturalLightHistory(entry);
+        if (naturalLightDisplay) {
+          basicsParts.push(naturalLightDisplay);
+        }
+        const basicsRow = basicsParts.length
+          ? `<div class="entry-basics">${basicsParts.map(p => `<span>${p}</span>`).join('')}</div>`
+          : '';
+
         return `
           <article class="entry-card">
             <div class="entry-date">${formatDate(entry.date)}</div>
             <div class="entry-stats">
               <span class="entry-stat">${emoji} Mood ${entry.mood}/10</span>
               <span class="entry-stat">⚡ Energy ${entry.energy}/10</span>
-              <span class="entry-stat">😴 ${entry.sleepHours}h · ${entry.sleepQuality || '—'}</span>
+              <span class="entry-stat">😴 ${formatHistorySleep(entry)}</span>
               <span class="entry-stat">💊 ${formatTime(entry.medicationTime)}</span>
             </div>
-            ${flavours ? `<div class="entry-chips">${flavours}</div>` : ''}
+            ${basicsRow}
+            ${vibes ? `<div class="entry-chips">${vibes}</div>` : ''}
             ${entry.appetite ? `<p class="entry-stat" style="font-size:0.85rem;color:var(--text-muted)">Appetite: ${escapeHtml(entry.appetite)}</p>` : ''}
             ${entry.socialEnergy ? `<p class="entry-stat" style="font-size:0.85rem;color:var(--text-muted)">Being around people: ${escapeHtml(entry.socialEnergy)}</p>` : ''}
             <p class="entry-stat" style="font-size:0.85rem;color:var(--text-muted)">Mood shift: ${shiftText}</p>
@@ -1002,15 +1218,20 @@
 
     // --- CSV Export ---
     document.getElementById('export-btn').addEventListener('click', () => {
-      const headers = ['Date', 'Mood (1-10)', 'Energy (1-10)', 'Sleep the night before (hours)', 'Sleep the night before quality', 'Med time', 'Flavour', 'Appetite', 'Social energy', 'Mood shift', 'Shift type', 'Low point time of day', 'Notes'];
+      const headers = ['Date', 'Mood (1-10)', 'Energy (1-10)', 'Bed Time', 'Wake Time', 'Sleep Duration (h)', 'Sleep quality', 'Meals Eaten', 'Cardio (min)', 'Natural light', 'Med time', 'Vibe', 'Appetite', 'Social energy', 'Mood shift', 'Shift type', 'Low point time of day', 'Notes'];
       const rows = entries.map(e => [
         e.date,
         e.mood,
         e.energy,
-        e.sleepHours,
+        e.bedTime || '',
+        e.wakeTime || '',
+        formatSleepDurationHours(e.bedTime, e.wakeTime, e.sleepHours),
         e.sleepQuality || '',
+        e.mealsEaten ?? '',
+        e.cardioMinutes ?? 0,
+        formatNaturalLightCsv(e),
         e.medicationTime || '',
-        (e.flavours || []).join('; '),
+        (e.vibe || e.flavours || []).join('; '),
         e.appetite || '',
         e.socialEnergy || '',
         e.moodShift ? 'Yes' : 'No',

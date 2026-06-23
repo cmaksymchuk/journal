@@ -65,6 +65,6 @@ Create a `.env.local` file in the project root (not committed) with the four var
 ## How it works
 
 - **Login**: Enter the shared password once. A token is stored in `localStorage` and sent with every API request.
-- **Journal tab**: Pick today or one of the previous three days, then log mood (1–10), energy, sleep the night before, med time, flavour tags, appetite, social energy, mood shifts, and optional notes. One entry per day — saving again updates that day's entry.
+- **Journal tab**: Pick today or one of the previous three days, then log mood (1–10), energy, sleep the night before, med time, vibe tags, appetite, social energy, mood shifts, and optional notes. One entry per day — saving again updates that day's entry.
 - **CSV export** includes Appetite and Social energy columns for doctor visits.
 - **History tab**: Browse past entries (newest first, up to 60 shown). Export all entries as CSV for a doctor visit.
